@@ -1,29 +1,51 @@
-/* Main App Component - Handles routing (using react-router-dom), query client and other providers - use this file to add all routes */
-import { BrowserRouter, Routes, Route } from 'react-router-dom'
+import { BrowserRouter, Navigate, Route, Routes } from 'react-router-dom'
 import { Toaster } from '@/components/ui/toaster'
 import { Toaster as Sonner } from '@/components/ui/sonner'
 import { TooltipProvider } from '@/components/ui/tooltip'
-import Index from './pages/Index'
-import NotFound from './pages/NotFound'
-import Layout from './components/Layout'
+import { AuthProvider, useAuth } from '@/contexts/AuthContext'
+import { ThemeProvider } from '@/contexts/ThemeContext'
+import Layout from '@/components/Layout'
+import Index from '@/pages/Index'
+import Reviews from '@/pages/Reviews'
+import ReviewDetail from '@/pages/ReviewDetail'
+import Tasks from '@/pages/Tasks'
+import Integrations from '@/pages/Integrations'
+import Auth from '@/pages/Auth'
+import NotFound from '@/pages/NotFound'
 
-// ONLY IMPORT AND RENDER WORKING PAGES, NEVER ADD PLACEHOLDER COMPONENTS OR PAGES IN THIS FILE
-// AVOID REMOVING ANY CONTEXT PROVIDERS FROM THIS FILE (e.g. TooltipProvider, Toaster, Sonner)
-
-const App = () => (
-  <BrowserRouter>
-    <TooltipProvider>
-      <Toaster />
-      <Sonner />
-      <Routes>
-        <Route element={<Layout />}>
-          <Route path="/" element={<Index />} />
-          {/* ADD ALL CUSTOM ROUTES MUST BE ADDED HERE */}
-        </Route>
-        <Route path="*" element={<NotFound />} />
-      </Routes>
-    </TooltipProvider>
-  </BrowserRouter>
-)
-
-export default App
+function Protected() {
+  const { user, ready } = useAuth()
+  if (!ready) return null
+  return user ? <Layout /> : <Navigate to="/login" replace />
+}
+export default function App() {
+  return (
+    <BrowserRouter>
+      <ThemeProvider>
+        <TooltipProvider>
+          <AuthProvider>
+            <Toaster />
+            <Sonner position="bottom-right" />
+            <Routes>
+              <Route path="/login" element={<Auth mode="login" />} />
+              <Route path="/signup" element={<Auth mode="signup" />} />
+              <Route path="/verify-email" element={<Auth mode="verify" />} />
+              <Route path="/forgot-password" element={<Auth mode="forgot" />} />
+              <Route path="/reset-password" element={<Auth mode="reset" />} />
+              <Route path="/confirm-email-change" element={<Auth mode="email-change" />} />
+              <Route element={<Protected />}>
+                <Route path="/" element={<Navigate to="/nova-revisao" replace />} />
+                <Route path="/nova-revisao" element={<Index />} />
+                <Route path="/revisoes" element={<Reviews />} />
+                <Route path="/revisoes/:id" element={<ReviewDetail />} />
+                <Route path="/tarefas" element={<Tasks />} />
+                <Route path="/integracoes" element={<Integrations />} />
+              </Route>
+              <Route path="*" element={<NotFound />} />
+            </Routes>
+          </AuthProvider>
+        </TooltipProvider>
+      </ThemeProvider>
+    </BrowserRouter>
+  )
+}
